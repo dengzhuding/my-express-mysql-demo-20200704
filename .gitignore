@@ -9,3 +9,5 @@ node_modules/
 .env.test
 # vscode
 .vscode
+dist
+logs
