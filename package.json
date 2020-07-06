@@ -17,7 +17,7 @@
     "log4js": "^6.3.0",
     "mysql2": "^2.1.0",
     "properties": "^1.2.1",
-    "sequelize": "^5.8.6"
+    "sequelize": "^5.15.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
