@@ -1,7 +1,8 @@
 // 通用工具方法
 import properties from 'properties';
 import path from 'path';
-import {Sequelize} from 'sequelize'
+import {Sequelize} from 'sequelize';
+import fs from 'fs';
 
 
 /**
@@ -67,4 +68,38 @@ export async function initSequelize() {
   console.log('开始测试连接');
   await sequelize.authenticate();
   console.log('连接成功');
+  return sequelize;
 }
+
+/**
+ * 初始化Modules
+ */
+const db = {}
+const modelsDir = path.join(__dirname, '../models')
+export async function installModel() {
+  console.log('modelsDir', modelsDir);
+  fs
+  .readdirSync(modelsDir)
+  .filter(file => {
+    return file.indexOf('.') !== 0 && file.slice(-3) === '.js';
+  })
+  .forEach(file => {
+    const filePath = path.join(modelsDir, file);
+    console.log('filePath', filePath);
+    console.log('typeof sequelize.import', typeof sequelize.import)
+    var model = sequelize.import(filePath);
+    db[model.name] = model;
+  });
+
+  Object.keys(db).forEach(modelName => {
+    if (db[modelName].associate) {
+      db[modelName].associate(db);
+    }
+  });
+
+  db.sequelize = sequelize;
+  db.Sequelize = Sequelize;
+  return db;
+}
+
+export {db}

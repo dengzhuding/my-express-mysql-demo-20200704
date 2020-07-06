@@ -2,25 +2,13 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import {getLogger, useLogger} from './log/index';
-import {initSequelize, getProperties} from './initialize/index';
+import {initSequelize, getProperties, installModel} from './initialize/index';
 import container from './container/index';
 import { scopePerRequest, loadControllers } from 'awilix-express';
-import {Lifetime} from 'awilix';
+import {Lifetime, asClass, asValue} from 'awilix';
+import { baseMiddleware } from './middleware/base';
 
 
-const ready = async function () {
-  let config = null;
-  try {
-    await initSequelize();
-    config = await getProperties()
-    console.log('getProperties:', config);
-  } catch (e) {
-    console.error('初始化失败:', e);
-    process.exitCode = 1;
-    return
-  }
-}
-ready();
 const app = express();
 // 跨域
 app.all('*', function(req, res, next) {
@@ -32,12 +20,6 @@ app.all('*', function(req, res, next) {
 });
 // 使用logs
 useLogger(app);
-// awilix-express 中间件
-app.use(scopePerRequest(container));
-app.use('/api', loadControllers('api/*.js', {
-  cwd: __dirname,
-  lifetime: Lifetime.SINGLETON
-}));
 // 其他路由
 app.get('/', (req, res, next) => {
   res.write('server has started, welcome!');
@@ -53,7 +35,35 @@ app.post('/api/test-json', (req, res, next) => {
     res.end();
   })
 });
-app.use(function (req, res, next) {
-  res.status(404).send("Sorry can't find that!")
-})
-export default app
+const init = async function () {
+  // 定义模型，注入awilix服务
+  // awilix-express 中间件
+  app.use(scopePerRequest(container));
+  app.use(baseMiddleware(app));
+  // 连接数据库
+  const sequelize = await initSequelize();
+  const config = await getProperties();
+  // 初始化models
+  installModel();
+  // 模型同步
+  await sequelize.sync();
+  container.register({
+    globalConfig: asValue(config),
+    sequelize: asValue(sequelize)
+  });
+  // 依赖注入配置service层和dao层
+  container.loadModules(['services/*Service.js', 'daos/*Dao.js'], {
+    formatName: 'camelCase',
+    register: asClass,
+    cwd: path.resolve(__dirname)
+  });
+  app.use('/api', loadControllers('api/*.js', {
+    cwd: __dirname,
+    lifetime: Lifetime.SINGLETON
+  }));
+  app.use(function (req, res, next) {
+    res.status(404).send("Sorry can't find that!")
+  })
+  return config;
+}
+export {app, init}
