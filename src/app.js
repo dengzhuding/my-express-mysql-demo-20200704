@@ -7,9 +7,15 @@ import container from './container/index';
 import { scopePerRequest, loadControllers } from 'awilix-express';
 import {Lifetime, asClass, asValue} from 'awilix';
 import { baseMiddleware } from './middleware/base';
+import bodyParser from 'body-parser'
 
 
 const app = express();
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+// app.use(bodyParser.json())
 // 跨域
 app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -47,6 +53,8 @@ const init = async function () {
   installModel();
   // 模型同步
   await sequelize.sync();
+  // await sequelize.sync({ alter: true });
+  // await sequelize.sync({ force: true });
   container.register({
     globalConfig: asValue(config),
     sequelize: asValue(sequelize)

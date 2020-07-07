@@ -30,4 +30,39 @@ export default class TodoApi {
       data: todolist
     });
   }
+  
+  @route('/add')
+  @POST()
+  async add(req, res) {
+    const {record_id, name} = req.body;
+    const item = {
+      recordId: record_id,
+      name: name
+    }
+    if (!item.recordId) {
+      item.recordId = Math.ceil(Math.random()*10)
+    }
+    if (!item.name) {
+      res.json({
+        success: false,
+        message: '请传入name参数！',
+        data: null
+      });
+      return
+    }
+    const { success, data, message } = await this.todoService.addTodoItem(item)
+    if (!success) {
+      res.json({
+        success: false,
+        message: message,
+        data: null
+      });
+      return
+    }
+    res.json({
+      success: true,
+      message: '添加成功',
+      data: data
+    });
+  }
 }

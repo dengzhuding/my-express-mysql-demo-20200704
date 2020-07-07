@@ -21,14 +21,14 @@ export default class TodoService extends BaseService {
       }
     });
     if (exsitErr) {
-      return this.fail('添加失败', null, err);
+      return this.fail('添加失败', null, exsitErr);
     }
     if (itemExsit) {
       return this.fail('已存在');
     }
     const [addErr] = await this.itemDao.addItem(item);
     if (addErr) {
-      return this.fail('添加失败', null, err);
+      return this.fail('添加失败', null, addErr);
     }
     return this.success('添加成功')
   }

@@ -1,7 +1,19 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   var Item = sequelize.define('Item', {
-    title: DataTypes.STRING
+    recordId: {
+      type: DataTypes.INTEGER,
+      field: 'record_id',
+      primaryKey: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      field: 'name'
+    },
+    state: {
+      type: DataTypes.INTEGER,
+      field: 'state'
+    }
   });
   // 关联表
   // Item.associate = function (models) {
