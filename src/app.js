@@ -74,4 +74,5 @@ const init = async function () {
   })
   return config;
 }
+
 export {app, init}
